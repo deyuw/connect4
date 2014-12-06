@@ -68,7 +68,24 @@
 	</div>
 	
 <?php 
-	
+	// game arena
+	$rows = 6; // define number of rows
+    $cols = 7; // define number of columns
+    echo "<table>";
+        for ($tr = 1; $tr <= $rows; $tr++) {
+            echo "<tr>";
+            for ($td = 1; $td <= $cols; $td++) {
+                $index = ($td - 1) + $cols * ($tr - 1);
+                echo "<td>";
+                echo '<img type="button" id="slot' . $index . '" src="' . base_url("images/slot.png") . '"/>';
+                echo "</td>";
+            }
+            echo "</tr>";
+        }
+
+        echo "</table>";
+
+    // chat board
 	echo form_textarea('conversation');
 	
 	echo form_open();

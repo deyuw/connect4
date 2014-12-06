@@ -10,7 +10,6 @@
 		$(function(){
 			$('#availableUsers').everyTime(500,function(){
 					$('#availableUsers').load('<?= base_url() ?>arcade/getAvailableUsers');
-
 					$.getJSON('<?= base_url() ?>arcade/getInvitation',function(data, text, jqZHR){
 							if (data && data.invited) {
 								var user=data.login;
