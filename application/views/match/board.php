@@ -12,7 +12,7 @@
 		var status = "<?= $status ?>";
 		
 		$(function(){
-			$('body').everyTime(1000,function(){
+			$('body').everyTime(500,function(){
 					if (status == 'waiting') {
 						$.getJSON('<?= base_url() ?>arcade/checkInvitation',function(data, text, jqZHR){
 								if (data && data.status=='rejected') {
@@ -28,8 +28,7 @@
 					}
 					///////////
 					if (status == 'playing') {
-                        url = "<?= base_url() ?>board/getSlots";
-                        $.getJSON(url, function(data, text, jqXHR) {
+                        $.getJSON("<?= base_url() ?>board/getSlots", function(data, text, jqXHR) {
                             if (data && data.status == 'success') {
                                 var boardArray = JSON.parse(data.blob);
                                 if (boardArray[-1] != null) {
@@ -39,10 +38,10 @@
                                     var index = boardArray[i];
                                     if (index >= 42) {
                                         index = index - 42;
-                                        fillSlot(index, data.yellow);
+                                        replaceSlot(index, data.yellow);
                                     }
                                     else {
-                                        fillSlot(index, data.red);
+                                        replaceSlot(index, data.red);
                                     }
                                 }
                                 if (data.match_status == 'user1Won'){
@@ -63,27 +62,22 @@
                             }
                         });
                     }
-                    ///////////
-                var i, j;
-                for (i = 0; i < 6; i++)
-                {
-                    for (j = 0; j < 7; j++)
-                    {
-                        var index = j + 7 * i;
-
-                        $('#slot' + index).click({param1: j, param2: i}, function(event) {
+                // a helper function to get the index of the slot in the grid. 
+                var row, col;
+                for (row = 0; row < 6; row++){
+                    for (col = 0; col < 7; col++){
+                        var index = col + 7 * row; // since each row has 7 slots.
+                        $('#slot' + index).click({param1: col, param2: row}, function(event) {
                             $.post('<?= base_url() ?>board/postSlots', {
-                                indexX: event.data.param1,
-                                indexY: event.data.param2,
+                                X: event.data.param1,
+                                Y: event.data.param2,
                                 colNum: 7
                             }, function(data, textStatus, jqXHR) {
-
                             });
                         });
                     }
                 }
-                ////////////
-					var url = "<?= base_url() ?>board/getMsg";
+				var url = "<?= base_url() ?>board/getMsg";
 					$.getJSON(url, function (data,text,jqXHR){
 						if (data && data.status=='success') {
 							var conversation = $('[name=conversation]').val();
@@ -93,8 +87,6 @@
 						}
 					});
 			});
-
-			
 
 			$('form').submit(function(){
 				var arguments = $(this).serialize();
@@ -107,19 +99,14 @@
 				return false;
 				});	
 		});
-//////
-	      function fillSlot(index, color)
-            {
-
-                if (status == 'playing')
-                {
+	// a helper function that replace the empty slot with right color.
+	      function replaceSlot(index, color){
+                if (status == 'playing'){
                     var slot = document.getElementById("slot" + index);
                     if (slot.src != color) {
                         slot.src = color;
                     }
-
                 }
-
             }
 	</script>
 	</head> 
@@ -138,16 +125,24 @@
 			echo "Wating on " . $otherUser->login;
 	?>
 	</div>
-	
+	<div id = 'game_info'>
+	<?php 
+		if ($user->login ==1 )
+			echo " your turn " . $otherUser->login;
+		else
+			echo "Wating on " . $otherUser->login;
+	?>
+	</div>
+
 <?php 
 	// game arena
 	$rows = 6; // define number of rows
     $cols = 7; // define number of columns
     echo "<table>";
-        for ($tr = 1; $tr <= $rows; $tr++) {
+        for ($row = 1; $row <= $rows; $row++) {
             echo "<tr>";
-            for ($td = 1; $td <= $cols; $td++) {
-                $index = ($td - 1) + $cols * ($tr - 1);
+            for ($col = 1; $col <= $cols; $col++) {
+                $index = ($col - 1) + $cols * ($row - 1);
                 echo "<td>";
                 echo '<img type="button" id="slot' . $index . '" src="' . base_url("images/slot.png") . '"/>';
                 echo "</td>";

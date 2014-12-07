@@ -142,74 +142,70 @@ class Board extends CI_Controller {
  	function postSlots() {
         $this->load->model('user_model');
         $this->load->model('match_model');
-        // this modle set the game rules.
+        // this modle set the game rules which will check if the game ends.
         $this->load->model('rules_model');
-
         $user = $_SESSION['user'];
-
-        $indexX = $this->input->post('indexX');
-        $indexY = $this->input->post('indexY');
+        // get data from board'view
+        $x = $this->input->post('X');
+        $y = $this->input->post('Y');
         $colNum = $this->input->post('colNum');
-        $index = \intval($indexX) + \intval($colNum) * \intval($indexY);
-
+        $index = \intval($x) + \intval($colNum) * \intval($y);
+        // get user.
         $user = $this->user_model->getExclusive($user->login);
         if ($user->user_status_id != User::PLAYING) {
             $errormsg = "Not in PLAYING state";
             goto error;
         }
 
-        // start transactional mode  
+        // start the transactional mode  
         $this->db->trans_begin();
-
         $match = $this->match_model->getExclusive($user->match_id);
         $blob = $match->board_state;
-        $currentUser = 0;
-
-        if ($match->user2_id == $user->id) {
+        // get the current user
+        if ($match->user1_id == $user->id){
+            $currentUser = 0;
+        }else{
             $currentUser = 1;
         }
 
-        if ($blob != NULL) {
-            $boardArray = unserialize($blob);
-            if ($boardArray[-1] != $currentUser) {
-                $index = $this->rules_model->placeMove($boardArray, $indexX, $indexY);
-                if ($index >= 0) {
-                    if ($currentUser == 1)
-                        $index += 42;
-                    $slotFilled = false;
-                    $maxkey = 0;
-                    foreach ($boardArray as $key => $value) {
+        if ($blob == NULL){// initial the game 
+            $index = $this->rules_model->placeMove(NULL, $x);
+                if ($currentUser == 1){$index += 42;}// this is the index for user 2 
+                $board_info = array(0 => $index, -1 => $currentUser);
+                $blob = serialize($board_info);
+                $this->match_model->insertBoard($match->id, $blob);
+        }else { // its during the game
+            $board_info = unserialize($blob);
+            // board_info[-1] stores the currenct user.
+            if ($board_info[-1] != $currentUser) {
+                $index = $this->rules_model->placeMove($board_info, $x);
+                    if ($currentUser == 1){$index += 42;} // this index is for user2
+                    $isFilled = false;
+                    $newkey = 0;
+                    foreach ($board_info as $key => $value) {
                         if ($value == $index && $key >= 0) {
-                            $slotFilled = true;
-                        }
-                        if($key >= 0)$maxkey = $key;
+                            $isFilled = true;}
+                        if($key >= 0){
+                            $newkey = $key;}
                     }
-                    $maxkey += 1;
-                    if (!$slotFilled) {
-                        $boardArray[$maxkey] = $index;
-                        $boardArray[-1] = $currentUser;
-                        $boardBlob = serialize($boardArray);
-                        $this->match_model->insertBoard($match->id, $boardBlob);
-                        $userWin = $this->rules_model->checkWin($boardArray);
+                    $newkey += 1;// get the new key
+                    if (!$isFilled) {
+                        $board_info[$newkey] = $index;
+                        $board_info[-1] = $currentUser;
+                        $blob = serialize($board_info);
+                        $this->match_model->insertBoard($match->id, $blob);
+                        $userWin = $this->rules_model->checkWin($board_info);
                         if($userWin > 0){
-                            if($userWin == 1){
+                            if($userWin == 1){// user 1 wins
                                 $this->match_model->updateStatus($match->id, 2);
-                            }
-                            else {
+                            }else if ($userWin ==2) {//user 2 wins
                                 $this->match_model->updateStatus($match->id, 3);
+                            }else {// tie
+                                $this->match_model->updateStatus($match->id, 4);
                             }
                         }
                     }
-                }
-            }
-        } else if ($currentUser == 0) {
-            $index = $this->rules_model->placeMove(NULL, $indexX, $indexY);
-            if ($index >= 0) {
-                if ($currentUser == 1)
-                    $index += 42;
-                $boardArray = array(0 => $index, -1 => $currentUser);
-                $boardBlob = serialize($boardArray);
-                $this->match_model->insertBoard($match->id, $boardBlob);
+               
             }
         }
         
