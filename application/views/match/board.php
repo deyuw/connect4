@@ -10,7 +10,7 @@
 		var otherUser = "<?= $otherUser->login ?>";
 		var user = "<?= $user->login ?>";
 		var status = "<?= $status ?>";
-		
+
 		$(function(){
 			$('body').everyTime(500,function(){
 					if (status == 'waiting') {
@@ -30,12 +30,18 @@
 					if (status == 'playing') {
                         $.getJSON("<?= base_url() ?>board/getSlots", function(data, text, jqXHR) {
                             if (data && data.status == 'success') {
-                                var boardArray = JSON.parse(data.blob);
-                                if (boardArray[-1] != null) {
-                                    currentUser = boardArray[-1];
+                                var board_info = JSON.parse(data.blob);
+                                if (board_info[-1] != null) {
+                                    var currentUser = board_info[-1];
+                                    if (currentUser == 0) {
+                                    	currentPlayer = JSON.parse(data.user1Login);
+                                    }else{
+                                    	currentPlayer = JSON.parse(data.user2Login);
+                                    }
+									$('#game_info').html(currentPlayer + 'Turn');
                                 }
                                 for (var i = 0; i < data.size; i++) {
-                                    var index = boardArray[i];
+                                    var index = board_info[i];
                                     if (index >= 42) {
                                         index = index - 42;
                                         replaceSlot(index, data.yellow);
@@ -125,14 +131,7 @@
 			echo "Wating on " . $otherUser->login;
 	?>
 	</div>
-	<div id = 'game_info'>
-	<?php 
-		if ($user->login ==1 )
-			echo " your turn " . $otherUser->login;
-		else
-			echo "Wating on " . $otherUser->login;
-	?>
-	</div>
+	<p id='game_info'></p>
 
 <?php 
 	// game arena
