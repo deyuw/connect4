@@ -163,15 +163,15 @@ class Board extends CI_Controller {
         $blob = $match->board_state;
         // get the current user
         if ($match->user1_id == $user->id){
-            $currentUser = 0;
+            $currentUser = 0; // if it is user1 of the match then currentUser is 0
         }else{
-            $currentUser = 1;
+            $currentUser = 1;// otherwise is 1
         }
 
         if ($blob == NULL){// initial the game 
-            $index = $this->rules_model->placeMove(NULL, $x);
+            $index = $this->rules_model->placeMove(NULL, $x);// get the index of the player's move
                 if ($currentUser == 1){$index += 42;}// this is the index for user 2 
-                $board_info = array(0 => $index, -1 => $currentUser);
+                $board_info = array(0 => $index, -1 => $currentUser);// key -1 store the value of the currentUser
                 $blob = serialize($board_info);
                 $this->match_model->insertBoard($match->id, $blob);
         }else { // its during the game
@@ -180,8 +180,8 @@ class Board extends CI_Controller {
             if ($board_info[-1] != $currentUser) {
                 $index = $this->rules_model->placeMove($board_info, $x);
                     if ($currentUser == 1){$index += 42;} // this index is for user2
-                    $isFilled = false;
-                    $newkey = 0;
+                    $isFilled = false;// check if this slot is filled already
+                    $newkey = 0;// a new key for the blob
                     foreach ($board_info as $key => $value) {
                         if ($value == $index && $key >= 0) {
                             $isFilled = true;}
@@ -189,18 +189,18 @@ class Board extends CI_Controller {
                             $newkey = $key;}
                     }
                     $newkey += 1;// get the new key
-                    if (!$isFilled) {
+                    if (!$isFilled) {// this is a new index within the grid, then the player can place his move.
                         $board_info[$newkey] = $index;
                         $board_info[-1] = $currentUser;
                         $blob = serialize($board_info);
                         $this->match_model->insertBoard($match->id, $blob);
                         $userWin = $this->rules_model->checkWin($board_info);
-                        if($userWin > 0){
+                        if($userWin > 0){// if the game is terminated
                             if($userWin == 1){// user 1 wins
                                 $this->match_model->updateStatus($match->id, 2);
                             }else if ($userWin ==2) {//user 2 wins
                                 $this->match_model->updateStatus($match->id, 3);
-                            }else {// tie
+                            }else {// tie game
                                 $this->match_model->updateStatus($match->id, 4);
                             }
                         }
@@ -246,19 +246,20 @@ class Board extends CI_Controller {
         if ($blob == NULL) {
             $errormsg = "Blob error";
             goto error;
-        } else {
+        } else {// we get the data of blob successfully.
             $board_slots = unserialize($blob);
-            $size = 0;
+            $size = 0;// the size of the blob
             foreach ($board_slots as $key => $value) {
-                if ($key < 0)
+                if ($key < 0)//key maybe <0 because we have a key -1 to store the current User.
                     continue;
                 $size++;
             }
             $blob_json = json_encode($board_slots);
         }
         
-        $matchStatusId = $match->match_status_id;
+        $matchStatusId = $match->match_status_id;//get the game's status
         $matchStatus = 'active';
+        // if the game is over then free the users.
         if($matchStatusId == 2) {
             $matchStatus = 'user1Won';
             $this->user_model->updateStatus($user->id,User::AVAILABLE);
@@ -271,9 +272,10 @@ class Board extends CI_Controller {
             $matchStatus = 'tie';
             $this->user_model->updateStatus($user->id,User::AVAILABLE);
         }
+        //get the login of the two players in the match
         $user1Login = $this->user_model->getFromId($match->user1_id)->login;
         $user2Login = $this->user_model->getFromId($match->user2_id)->login;
-        
+        // encode the json
         echo json_encode(array('status' => 'success', 'message' => $msg, 'blob' => $blob_json, 'size' => $size, 'red' => base_url("images/red.png"), 'yellow' => base_url("images/yellow.png"), 'match_status'=>$matchStatus, 'user1Login'=>$user1Login, 'user2Login'=>$user2Login));
         return;
         

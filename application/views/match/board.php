@@ -26,14 +26,15 @@
 								
 						});
 					}
-					///////////
+					// during the game
 					if (status == 'playing') {
                         $.getJSON("<?= base_url() ?>board/getSlots", function(data, text, jqXHR) {
                             if (data && data.status == 'success') {
                                 var board_info = JSON.parse(data.blob);
-                                if (board_info[-1] != null) {
+                                if (board_info[-1] != null) {//get the current player
                                     var currentUser = board_info[-1];
                                     var currentPlayer;
+                                    // print out the player's turn on the screen
                                     if (currentUser == 0) {
                                     	currentPlayer = data.user1Login;
                                     }else{
@@ -42,7 +43,8 @@
 									$("#game_info").html("It is player " + currentPlayer + "'s turn");
                                 }
                                 for (var i = 0; i < data.size; i++) {
-                                    var board_i = board_info[i]; ////////////////////////////////////
+                                    // fills out the board that player2 with yellow and player 1 witn red.
+                                    var board_i = board_info[i]; 
                                     if (board_i >= 42) {
                                         board_i = board_i - 42;
                                         replaceSlot(board_i, data.yellow);
@@ -51,6 +53,7 @@
                                         replaceSlot(board_i, data.red);
                                     }
                                 }
+                                // if the game ends
                                 if (data.match_status == 'user1Won'){
                                     alert(data.user1Login + ' wins!');
                                     status = 'done';
