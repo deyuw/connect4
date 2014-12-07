@@ -12,7 +12,7 @@
 		var status = "<?= $status ?>";
 		
 		$(function(){
-			$('body').everyTime(2000,function(){
+			$('body').everyTime(1000,function(){
 					if (status == 'waiting') {
 						$.getJSON('<?= base_url() ?>arcade/checkInvitation',function(data, text, jqZHR){
 								if (data && data.status=='rejected') {
@@ -26,6 +26,63 @@
 								
 						});
 					}
+					///////////
+					if (status == 'playing') {
+                        url = "<?= base_url() ?>board/getSlots";
+                        $.getJSON(url, function(data, text, jqXHR) {
+                            if (data && data.status == 'success') {
+                                var boardArray = JSON.parse(data.blob);
+                                if (boardArray[-1] != null) {
+                                    currentUser = boardArray[-1];
+                                }
+                                for (var i = 0; i < data.size; i++) {
+                                    var index = boardArray[i];
+                                    if (index >= 42) {
+                                        index = index - 42;
+                                        fillSlot(index, data.yellow);
+                                    }
+                                    else {
+                                        fillSlot(index, data.red);
+                                    }
+                                }
+                                if (data.match_status == 'user1Won'){
+                                    alert(data.user1Login + ' has won!');
+                                    status = 'done';
+                                    window.location = "<?= site_url()?>arcade/index/";
+                                }
+                                else if (data.match_status == 'user2Won') {
+                                    alert(data.user2Login + ' has won!');
+                                    status = 'done';
+                                    window.location = "<?= site_url()?>arcade/index";
+                                }
+                                else if (data.match_status == 'tie') {
+                                    alert('Tie game!');
+                                    status = 'done';
+                                    window.location = "<?= site_url()?>arcade/index";
+                                }
+                            }
+                        });
+                    }
+                    ///////////
+                var i, j;
+                for (i = 0; i < 6; i++)
+                {
+                    for (j = 0; j < 7; j++)
+                    {
+                        var index = j + 7 * i;
+
+                        $('#slot' + index).click({param1: j, param2: i}, function(event) {
+                            $.post('<?= base_url() ?>board/postSlots', {
+                                indexX: event.data.param1,
+                                indexY: event.data.param2,
+                                colNum: 7
+                            }, function(data, textStatus, jqXHR) {
+
+                            });
+                        });
+                    }
+                }
+                ////////////
 					var url = "<?= base_url() ?>board/getMsg";
 					$.getJSON(url, function (data,text,jqXHR){
 						if (data && data.status=='success') {
@@ -36,6 +93,8 @@
 						}
 					});
 			});
+
+			
 
 			$('form').submit(function(){
 				var arguments = $(this).serialize();
@@ -48,7 +107,20 @@
 				return false;
 				});	
 		});
-	
+//////
+	      function fillSlot(index, color)
+            {
+
+                if (status == 'playing')
+                {
+                    var slot = document.getElementById("slot" + index);
+                    if (slot.src != color) {
+                        slot.src = color;
+                    }
+
+                }
+
+            }
 	</script>
 	</head> 
 <body>  
