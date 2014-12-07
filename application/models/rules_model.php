@@ -3,7 +3,7 @@
 class rules_model extends CI_Model {
 
     // Insert new piece into the field
-    function placeMove($field, $column) { // placeMove/insertPiece ///////////////////////////
+    function placeMove($field, $column) {
         if ($field != NULL) {
             $newRow = 5;
             $newColumn = $column;

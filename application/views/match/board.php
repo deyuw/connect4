@@ -33,30 +33,31 @@
                                 var board_info = JSON.parse(data.blob);
                                 if (board_info[-1] != null) {
                                     var currentUser = board_info[-1];
+                                    var currentPlayer;
                                     if (currentUser == 0) {
-                                    	currentPlayer = JSON.parse(data.user1Login);
+                                    	currentPlayer = data.user1Login;
                                     }else{
-                                    	currentPlayer = JSON.parse(data.user2Login);
+                                    	currentPlayer = data.user2Login;
                                     }
-									$('#game_info').html(currentPlayer + 'Turn');
+									$("#game_info").html("It is player " + currentPlayer + "'s turn");
                                 }
                                 for (var i = 0; i < data.size; i++) {
-                                    var index = board_info[i];
-                                    if (index >= 42) {
-                                        index = index - 42;
-                                        replaceSlot(index, data.yellow);
+                                    var board_i = board_info[i]; ////////////////////////////////////
+                                    if (board_i >= 42) {
+                                        board_i = board_i - 42;
+                                        replaceSlot(board_i, data.yellow);
                                     }
                                     else {
-                                        replaceSlot(index, data.red);
+                                        replaceSlot(board_i, data.red);
                                     }
                                 }
                                 if (data.match_status == 'user1Won'){
-                                    alert(data.user1Login + ' has won!');
+                                    alert(data.user1Login + ' wins!');
                                     status = 'done';
                                     window.location = "<?= site_url()?>arcade/index/";
                                 }
                                 else if (data.match_status == 'user2Won') {
-                                    alert(data.user2Login + ' has won!');
+                                    alert(data.user2Login + ' wins!');
                                     status = 'done';
                                     window.location = "<?= site_url()?>arcade/index";
                                 }
