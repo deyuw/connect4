@@ -1,121 +1,145 @@
 <?php
-
+// check if full
+// function structuring
+// comments
+// _new files
 class rules_model extends CI_Model {
 
-    function placeMove($board, $x, $y) {
-        if ($board == NULL) {
-            return intval($x) + 7 * 5;
-        } else {
-            $newx = $x;
-            $newy = 5;
-            foreach ($board as $key => $value) {
-                if ($key < 0)
+    // Insert new piece into the field
+    function placeMove($field, $column) {
+        if ($field != NULL) {
+            $newRow = 5;
+            $newColumn = $column;
+            foreach ($field as $key => $val) {
+                if ($key < 0){
                     continue;
-                $newvalue = $value;
-                if ($value >= 42)
-                    $newvalue = $value - 42;
-                $currentIndexX = (int) ($newvalue % 7);
-                $currentIndexY = (int) floor($newvalue / 7);
-                if ($newx == $currentIndexX) {
-                    $newcurrentIndexY = $currentIndexY - 1;
-                    if ($newcurrentIndexY < $newy)
-                        $newy = $newcurrentIndexY;
+                }
+
+                // Determine which piece is owned by whom
+                $newVal = $val;
+                if ($val >= 42)
+                    $newVal = $val - 42;
+
+                // Put new piece down on the field
+                $currCol = (int) ($newVal % 7);
+                $currRow = (int) floor($newVal / 7);
+                if ($newColumn == $currCol) {
+                    $newCurrRow = $currRow - 1;
+                    if ($newCurrRow < $newRow)
+                        $newRow = $newCurrRow;
                 }
             }
-            return $newx + 7 * $newy;
+            return $newColumn + 7 * $newRow;
+        } else {
+            return intval($column) + 7 * 5;
         }
     }
 
-    function checkWin($board) {
-        
-        
-        //start with first player
-        $userBoard = array(array());
-        for ($i = 0; $i < 7; $i++) {
-            for ($j = 0; $j < 6; $j++) {
-                $isSet = array_keys($board, $i + 7 * $j);
-                $isFilled = false;
-                foreach ($isSet as $value) {
-                    if ($value >= 0) {
-                        $isFilled = true;
+    function checkWin($field) { // checkWin/playerWon
+        $boardA = array(array());
+        $boardB = array(array());
+
+        // check whether the first player won
+        for ($col=0; $col<7; $col++) {
+            for ($row=0; $row<6; $row++) {
+                $keys = array_keys($field, $col + 7 * $row);
+                $used = false;
+                foreach ($keys as $val) {
+                    if ($val >= 0) {
+                        $used = true;
                     }
                 }
-                if ($isFilled) {
-                    $userBoard[$i][$j] = 1;
+                if ($used == true) {
+                    $boardA[$col][$row] = 1;
                 } else {
-                    $userBoard[$i][$j] = 0;
+                    $boardA[$col][$row] = 0;
                 }
             }
         }
-        
-        
-        if ($this->checkWinBoard($userBoard))
+        if ($this->checkWinBoard($boardA)){ ///////////////////
             return 1;
+        }
 
-        $user2Board = array(array());
-        for ($i = 0; $i < 7; $i++) {
-            for ($j = 0; $j < 6; $j++) {
-                $isSet = array_keys($board, $i + 7 * $j + 42);
-                $isFilled = false;
-                for ($k = 0; $k < count($isSet); $k++) {
-                    if ($isSet[$k] >= 0) {
-                        $isFilled = true;
+        // check whether the second player won
+        for ($col = 0; $col < 7; $col++) {
+            for ($row = 0; $row < 6; $row++) {
+                $keys = array_keys($field, $col + 7 * $row + 42);
+                $used = false;
+                for ($i = 0; $i < count($keys); $i++) {
+                    if ($keys[$i] >= 0) {
+                        $used = true;
                     }
                 }
-                if ($isFilled) {
-                    $user2Board[$i][$j] = 1;
+                if ($used) {
+                    $boardB[$col][$row] = 1;
                 } else {
-                    $user2Board[$i][$j] = 0;
+                    $boardB[$col][$row] = 0;
                 }
             }
         }
-        if ($this->checkWinBoard($user2Board))
+        if ($this->checkWinBoard($boardB)){ ////////////////////
             return 2;
+        }
 
-        return 0;
-    }
-
-    function checkWinBoard($userBoard) {
-        $result = false;
-        for ($i = 0; $i < 7; $i++) {
-            for ($j = 0; $j < 6; $j++) {
-                //check horizontal
-                if ($i < 4) {
-                    if ($userBoard[$i][$j] == 1 && $userBoard[$i + 1][$j] == 1 && $userBoard[$i + 2][$j] == 1 && $userBoard[$i + 3][$j] == 1) {
-                        $result = true;
-                        //return $result;
-                    }
+        // check if the entire field has been filled
+        for ($col = 0; $col < 7; $col++) {
+            for ($row = 0; $row < 6; $row++) {
+                if ($boardA[$col][$row] == 0 && $boardB[$col][$row] == 0){
+                    return 0;
                 }
-                
-                //check vertical
-                if ($j < 3) {
-                    if ($userBoard[$i][$j] == 1 && $userBoard[$i][$j + 1] == 1 && $userBoard[$i][$j + 2] == 1 && $userBoard[$i][$j + 3] == 1) {
-                        $result = true;
-                       // return $result;
-                    }
-                }
-                
-                //check diagonal (top-left to bottom-right)
-                if ($j < 3 && $i < 4) {
-                    if ($userBoard[$i][$j] == 1 && $userBoard[$i + 1][$j + 1] == 1 && $userBoard[$i + 2][$j + 2] == 1 && $userBoard[$i + 3][$j + 3] == 1) {
-                        $result = true;
-                        return $result;
-                    }
-                }
-                
-                //check diagonal (top-right to bottom-left)
-                if ($j < 3 && $i > 2) {
-                    if ($userBoard[$i][$j] == 1 && $userBoard[$i - 1][$j + 1] == 1 && $userBoard[$i - 2][$j + 2] == 1 && $userBoard[$i - 3][$j + 3] == 1) {
-                        $result = true;
-                        //return $result;
-                    }
-                }
-                
             }
         }
-        return $result;
+
+        return 3;
     }
 
+    function checkWinBoard($field) { // boardEnd
+        $end = false;
+        for ($col = 0; $col < 7; $col++) {
+            for ($row = 0; $row < 6; $row++) {
+                // see if there is a row of 4 pieces of the same color
+                if ($col < 4) {
+                    if ($field[$col][$row] == 1 &&
+                        $field[$col + 1][$row] == 1 &&
+                        $field[$col + 2][$row] == 1 &&
+                        $field[$col + 3][$row] == 1) {
+                        $end = true;
+                    }
+                }
+                
+                // see if there is a column of 4 pieces of the same color
+                if ($row < 3) {
+                    if ($field[$col][$row] == 1 &&
+                        $field[$col][$row + 1] == 1 &&
+                        $field[$col][$row + 2] == 1 &&
+                        $field[$col][$row + 3] == 1) {
+                        $end = true;
+                    }
+                }
+
+                // see if there is a diagonal from the bottom left to the top right
+                if ($row < 3 && $col > 2) {
+                    if ($field[$col][$row] == 1 &&
+                        $field[$col - 1][$row + 1] == 1 &&
+                        $field[$col - 2][$row + 2] == 1 &&
+                        $field[$col - 3][$row + 3] == 1) { 
+                        $end = true;
+                    }
+                }
+                
+                // see if there is a diagonal from the top left to the bottom right
+                if ($row < 3 && $col < 4) {
+                    if ($field[$col][$row] == 1 &&
+                        $field[$col + 1][$row + 1] == 1 &&
+                        $field[$col + 2][$row + 2] == 1 &&
+                        $field[$col + 3][$row + 3] == 1) {
+                        $end = true;
+                    }
+                }
+            }
+        }
+        return $end;
+    }
 }
 
 ?>
