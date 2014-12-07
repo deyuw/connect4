@@ -1,12 +1,9 @@
 <?php
-// check if full
-// function structuring
-// comments
-// _new files
+
 class rules_model extends CI_Model {
 
     // Insert new piece into the field
-    function placeMove($field, $column) {
+    function placeMove($field, $column) { // placeMove/insertPiece ///////////////////////////
         if ($field != NULL) {
             $newRow = 5;
             $newColumn = $column;
@@ -15,33 +12,38 @@ class rules_model extends CI_Model {
                     continue;
                 }
 
-                // Determine which piece is owned by whom
+                // Determine who owns the piece
                 $newVal = $val;
                 if ($val >= 42)
                     $newVal = $val - 42;
 
-                // Put new piece down on the field
+                // Get the current column and row of that piece
                 $currCol = (int) ($newVal % 7);
                 $currRow = (int) floor($newVal / 7);
+
+                // Set the piece's location
                 if ($newColumn == $currCol) {
                     $newCurrRow = $currRow - 1;
                     if ($newCurrRow < $newRow)
                         $newRow = $newCurrRow;
                 }
             }
+
+            // Return the index of the piece
             return $newColumn + 7 * $newRow;
         } else {
             return intval($column) + 7 * 5;
         }
     }
 
-    function checkWin($field) { // checkWin/playerWon
+    function checkWin($field) { // checkWin/playerWon ////////////////////////////////////////
         $boardA = array(array());
         $boardB = array(array());
 
-        // check whether the first player won
+        // Check whether the first player won
         for ($col=0; $col<7; $col++) {
             for ($row=0; $row<6; $row++) {
+                // create a board consisting of only the first player's pieces
                 $keys = array_keys($field, $col + 7 * $row);
                 $used = false;
                 foreach ($keys as $val) {
@@ -56,13 +58,15 @@ class rules_model extends CI_Model {
                 }
             }
         }
-        if ($this->checkWinBoard($boardA)){ ///////////////////
+        // Check if this board has four pieces together
+        if ($this->checkWinBoard($boardA)){ ///////////////////////////////////////////////////
             return 1;
         }
 
-        // check whether the second player won
+        // Check whether the second player won
         for ($col = 0; $col < 7; $col++) {
             for ($row = 0; $row < 6; $row++) {
+                // create a board consisting of only the first player's pieces
                 $keys = array_keys($field, $col + 7 * $row + 42);
                 $used = false;
                 for ($i = 0; $i < count($keys); $i++) {
@@ -77,23 +81,26 @@ class rules_model extends CI_Model {
                 }
             }
         }
-        if ($this->checkWinBoard($boardB)){ ////////////////////
+        // Check if this board has four pieces together
+        if ($this->checkWinBoard($boardB)){ ////////////////////////////////////////////////////
             return 2;
         }
 
-        // check if the entire field has been filled
+        // Check if the entire field has been filled
         for ($col = 0; $col < 7; $col++) {
             for ($row = 0; $row < 6; $row++) {
                 if ($boardA[$col][$row] == 0 && $boardB[$col][$row] == 0){
+                    // there are still free spaces on the board
                     return 0;
                 }
             }
         }
 
+        // The entire field has been filled -> tie game
         return 3;
     }
 
-    function checkWinBoard($field) { // boardEnd
+    function checkWinBoard($field) { // checkWinBoard/boardEnd ///////////////////////////////
         $end = false;
         for ($col = 0; $col < 7; $col++) {
             for ($row = 0; $row < 6; $row++) {

@@ -42,10 +42,13 @@ class Match_model extends CI_Model {
 		return $this->db->update('match',array('match_status_id'=>$status));
 	}
 
-	function insertBoard($id, $blob) {
-        $insertBlob = mysql_real_escape_string($blob);
-        $this->db->where('id', $id);
-        return $this->db->update('match', array('board_state'=>$insertBlob));
+	// make/update the board to a new state
+	function insertBoard($matchID, $bl) { // makeBoard
+		// get blob
+        $blob = mysql_real_escape_string($bl);
+        // update the state of the match
+        $this->db->where('id', $matchID);
+        return $this->db->update('match', array('board_state'=>$blob));
     }
 	
 }
