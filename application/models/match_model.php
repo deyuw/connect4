@@ -43,7 +43,7 @@ class Match_model extends CI_Model {
 	}
 
 	// make/update the board to a new state
-	function insertBoard($matchID, $bl) { // makeBoard
+	function makeBoard($matchID, $bl) {
 		// get blob
         $blob = mysql_real_escape_string($bl);
         // update the state of the match

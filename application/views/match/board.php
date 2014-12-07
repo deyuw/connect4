@@ -2,124 +2,132 @@
 <!DOCTYPE html>
 
 <html>
-	<head>
-	<script src="http://code.jquery.com/jquery-latest.js"></script>
-	<script src="<?= base_url() ?>/js/jquery.timers.js"></script>
-	<script>
+<head>
+<script src="http://code.jquery.com/jquery-latest.js"></script>
+<script src="<?= base_url() ?>/js/jquery.timers.js"></script>
+<script>
 
-		var otherUser = "<?= $otherUser->login ?>";
-		var user = "<?= $user->login ?>";
-		var status = "<?= $status ?>";
+	var otherUser = "<?= $otherUser->login ?>";
+	var user = "<?= $user->login ?>";
+	var status = "<?= $status ?>";
 
-		$(function(){
-			$('body').everyTime(500,function(){
-					if (status == 'waiting') {
-						$.getJSON('<?= base_url() ?>arcade/checkInvitation',function(data, text, jqZHR){
-								if (data && data.status=='rejected') {
-									alert("Sorry, your invitation to play was declined!");
-									window.location.href = '<?= base_url() ?>arcade/index';
-								}
-								if (data && data.status=='accepted') {
-									status = 'playing';
-									$('#status').html('Playing ' + otherUser);
-								}
-								
-						});
+	$(function(){
+		$('body').everyTime(500,function(){
+			if (status == 'waiting') {
+				$.getJSON('<?= base_url() ?>arcade/checkInvitation',function(data, text, jqZHR){
+					if (data && data.status=='rejected') {
+						alert("Sorry, your invitation to play was declined!");
+						window.location.href = '<?= base_url() ?>arcade/index';
 					}
-					// during the game
-					if (status == 'playing') {
-                        $.getJSON("<?= base_url() ?>board/getSlots", function(data, text, jqXHR) {
-                            if (data && data.status == 'success') {
-                                var board_info = JSON.parse(data.blob);
-                                if (board_info[-1] != null) {//get the current player
-                                    var currentUser = board_info[-1];
-                                    var currentPlayer;
-                                    // print out the player's turn on the screen
-                                    if (currentUser == 0) {
-                                    	currentPlayer = data.user1Login;
-                                    }else{
-                                    	currentPlayer = data.user2Login;
-                                    }
-									$("#game_info").html("It is player " + currentPlayer + "'s turn");
-                                }
-                                for (var i = 0; i < data.size; i++) {
-                                    // fills out the board that player2 with yellow and player 1 witn red.
-                                    var board_i = board_info[i]; 
-                                    if (board_i >= 42) {
-                                        board_i = board_i - 42;
-                                        replaceSlot(board_i, data.yellow);
-                                    }
-                                    else {
-                                        replaceSlot(board_i, data.red);
-                                    }
-                                }
-                                // if the game ends
-                                if (data.match_status == 'user1Won'){
-                                    alert(data.user1Login + ' wins!');
-                                    status = 'done';
-                                    window.location = "<?= site_url()?>arcade/index/";
-                                }
-                                else if (data.match_status == 'user2Won') {
-                                    alert(data.user2Login + ' wins!');
-                                    status = 'done';
-                                    window.location = "<?= site_url()?>arcade/index";
-                                }
-                                else if (data.match_status == 'tie') {
-                                    alert('Tie game!');
-                                    status = 'done';
-                                    window.location = "<?= site_url()?>arcade/index";
-                                }
-                            }
-                        });
-                    }
-                // a helper function to get the index of the slot in the grid. 
-                var row, col;
-                for (row = 0; row < 6; row++){
-                    for (col = 0; col < 7; col++){
-                        var index = col + 7 * row; // since each row has 7 slots.
-                        $('#slot' + index).click({param1: col, param2: row}, function(event) {
-                            $.post('<?= base_url() ?>board/postSlots', {
-                                X: event.data.param1,
-                                Y: event.data.param2,
-                                colNum: 7
-                            }, function(data, textStatus, jqXHR) {
-                            });
-                        });
-                    }
-                }
-				var url = "<?= base_url() ?>board/getMsg";
-					$.getJSON(url, function (data,text,jqXHR){
-						if (data && data.status=='success') {
-							var conversation = $('[name=conversation]').val();
-							var msg = data.message;
-							if (msg.length > 0)
-								$('[name=conversation]').val(conversation + "\n" + otherUser + ": " + msg);
-						}
-					});
-			});
+					if (data && data.status=='accepted') {
+						status = 'playing';
+						$('#status').html('Playing ' + otherUser);
+					}
+				});
+			}
+			// During the game
+			if (status == 'playing') {
+                $.getJSON("<?= base_url() ?>board/getSlots", function(data, text, jqXHR) {
+                    if (data && data.status == 'success') {
+                        var board_info = JSON.parse(data.blob);
 
-			$('form').submit(function(){
-				var arguments = $(this).serialize();
-				var url = "<?= base_url() ?>board/postMsg";
-				$.post(url,arguments, function (data,textStatus,jqXHR){
-						var conversation = $('[name=conversation]').val();
-						var msg = $('[name=msg]').val();
-						$('[name=conversation]').val(conversation + "\n" + user + ": " + msg);
-						});
-				return false;
-				});	
-		});
-	// a helper function that replace the empty slot with right color.
-	      function replaceSlot(index, color){
-                if (status == 'playing'){
-                    var slot = document.getElementById("slot" + index);
-                    if (slot.src != color) {
-                        slot.src = color;
+                        // Get the current player
+                        if (board_info[-1] != null) {
+                            var currentUser = board_info[-1];
+                            var currentPlayer;
+
+                            // Print out the player's turn on the screen
+                            if (currentUser == 0) {
+                            	currentPlayer = data.user1Login;
+                            }else{
+                            	currentPlayer = data.user2Login;
+                            }
+							$("#game_info").html("It is player " + currentPlayer + "'s turn");
+                        }
+                        for (var i = 0; i < data.size; i++) {
+                            // Player2 is yellow and player1 is red
+                            var board_i = board_info[i]; 
+                            if (board_i >= 42) {
+                                board_i = board_i - 42;
+                                replaceSlot(board_i, data.yellow);
+                            }
+                            else {
+                                replaceSlot(board_i, data.red);
+                            }
+                        }
+
+                        // if the game ends
+                        if (data.match_status == 'user1Won'){
+                            alert(data.user1Login + ' wins!');
+                            status = 'done';
+                            window.location = "<?= site_url()?>arcade/index/";
+                        }
+                        else if (data.match_status == 'user2Won') {
+                            alert(data.user2Login + ' wins!');
+                            status = 'done';
+                            window.location = "<?= site_url()?>arcade/index";
+                        }
+                        else if (data.match_status == 'tie') {
+                            alert('Tie game!');
+                            status = 'done';
+                            window.location = "<?= site_url()?>arcade/index";
+                        }
                     }
+                });
+            }
+
+            // A helper function to get the index of the slot in the grid. 
+            var row, col;
+            for (row = 0; row < 6; row++){
+                for (col = 0; col < 7; col++){
+
+                	// Each row has 7 slots
+                    var index = col + 7 * row; 
+                    $('#slot' + index).click({param1: col, param2: row}, function(event) {
+                        $.post('<?= base_url() ?>board/postSlots', {
+                            X: event.data.param1,
+                            Y: event.data.param2,
+                            colNum: 7
+                        }, function(data, textStatus, jqXHR) {
+                        });
+                    });
                 }
             }
-	</script>
-	</head> 
+			var url = "<?= base_url() ?>board/getMsg";
+			$.getJSON(url, function (data,text,jqXHR){
+				if (data && data.status=='success') {
+					var conversation = $('[name=conversation]').val();
+					var msg = data.message;
+					if (msg.length > 0){
+						$('[name=conversation]').val(conversation + "\n" + otherUser + ": " + msg);
+					}							
+				}
+			});
+		});
+
+		$('form').submit(function(){
+			var arguments = $(this).serialize();
+			var url = "<?= base_url() ?>board/postMsg";
+			$.post(url,arguments, function (data,textStatus,jqXHR){
+					var conversation = $('[name=conversation]').val();
+					var msg = $('[name=msg]').val();
+					$('[name=conversation]').val(conversation + "\n" + user + ": " + msg);
+					});
+			return false;
+			});	
+		});
+
+		// a helper function that puts the right color piece into the slot.
+		function replaceSlot(index, color){
+            if (status == 'playing'){
+                var slot = document.getElementById("slot" + index);
+                if (slot.src != color) {
+                    slot.src = color;
+                }
+            }
+        }
+</script>
+</head> 
 <body>  
 	<h1>Game Area</h1>
 

@@ -36,7 +36,7 @@ class rules_model extends CI_Model {
         }
     }
 
-    function checkWin($field) { // checkWin/playerWon ////////////////////////////////////////
+    function playerWon($field) {
         $boardA = array(array());
         $boardB = array(array());
 
@@ -59,7 +59,7 @@ class rules_model extends CI_Model {
             }
         }
         // Check if this board has four pieces together
-        if ($this->checkWinBoard($boardA)){ ///////////////////////////////////////////////////
+        if ($this->boardEnd($boardA)){ 
             return 1;
         }
 
@@ -82,7 +82,7 @@ class rules_model extends CI_Model {
             }
         }
         // Check if this board has four pieces together
-        if ($this->checkWinBoard($boardB)){ ////////////////////////////////////////////////////
+        if ($this->boardEnd($boardB)){
             return 2;
         }
 
@@ -100,7 +100,7 @@ class rules_model extends CI_Model {
         return 3;
     }
 
-    function checkWinBoard($field) { // checkWinBoard/boardEnd ///////////////////////////////
+    function boardEnd($field) {
         $end = false;
         for ($col = 0; $col < 7; $col++) {
             for ($row = 0; $row < 6; $row++) {
